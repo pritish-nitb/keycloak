@@ -1,7 +1,5 @@
 org.keycloak.testsuite.services.clientpolicy.executor.TestPKCEEnforceExecutorFactory
 org.keycloak.testsuite.services.clientpolicy.executor.TestClientAuthenticationExecutorFactory
-org.keycloak.testsuite.services.clientpolicy.executor.TestSecureResponseTypeExecutorFactory
-org.keycloak.testsuite.services.clientpolicy.executor.TestSecureRequestObjectExecutorFactory
 org.keycloak.testsuite.services.clientpolicy.executor.TestClientDisabledExecutorFactory
 org.keycloak.testsuite.services.clientpolicy.executor.TestClientScopesExecutorFactory
 org.keycloak.testsuite.services.clientpolicy.executor.TestConsentRequiredExecutorFactory
