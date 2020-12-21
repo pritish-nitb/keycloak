@@ -16,6 +16,7 @@ import org.keycloak.protocol.ciba.CIBAConstants;
 import org.keycloak.protocol.ciba.CIBAErrorCodes;
 import org.keycloak.protocol.ciba.decoupledauthn.DecoupledAuthenticationProvider;
 import org.keycloak.protocol.ciba.endpoints.request.BackchannelAuthenticationRequest;
+import org.keycloak.protocol.ciba.endpoints.request.BackchannelAuthenticationRequestParserProcessor;
 import org.keycloak.protocol.ciba.resolvers.CIBALoginUserResolver;
 import org.keycloak.protocol.ciba.utils.CIBAAuthReqIdParser;
 import org.keycloak.protocol.ciba.utils.EarlyAccessBlocker;
@@ -74,11 +75,13 @@ public class BackchannelAuthenticationEndpoint {
         cors = Cors.add(httpRequest).auth().allowedMethods("POST").auth().exposedHeaders(Cors.ACCESS_CONTROL_ALLOW_METHODS);
         formParams = httpRequest.getDecodedFormParameters();
         dumpMultivaluedMap(formParams);
-        BackchannelAuthenticationRequest request = parseRequest(formParams);
-
         checkSsl();
         checkRealm();
         checkClient();
+
+        BackchannelAuthenticationRequest request = BackchannelAuthenticationRequestParserProcessor.parseRequest(event, session, client, formParams);
+        validateRequest(request);
+
         UserModel user = checkUser(request);
         logger.info(" client_id = " + client.getClientId());
         logger.info(" consent required = " + client.isConsentRequired());
@@ -137,53 +140,47 @@ public class BackchannelAuthenticationEndpoint {
         }
     }
 
-    private BackchannelAuthenticationRequest parseRequest(MultivaluedMap<String, String> params) {
-        BackchannelAuthenticationRequest request = new BackchannelAuthenticationRequest();
+    private void validateRequest(BackchannelAuthenticationRequest request) {
 
-        String scope = params.getFirst(CIBAConstants.SCOPE);
+        String scope =  request.getScope();
         if (scope == null)
             throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_REQUEST, "missing parameter : scope", Response.Status.BAD_REQUEST);
-        request.setScope(scope);
 
-        logger.info("  scope = " + request.getScope());
+        logger.debug("  scope = " + request.getScope());
 
         String authRequestedUserHint = realm.getCIBAPolicy().getAuthRequestedUserHint();
-        logger.info("  authRequestedUserHint = " + authRequestedUserHint);
-        String userHint = null;
+        logger.debug("  authRequestedUserHint = " + authRequestedUserHint);
+        String userHint;
         if (authRequestedUserHint.equals(CIBAConstants.LOGIN_HINT)) {
-            userHint = params.getFirst(CIBAConstants.LOGIN_HINT);
+            userHint = request.getLoginHint();
             if (userHint == null)
                 throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_REQUEST, "missing parameter : login_hint", Response.Status.BAD_REQUEST);
-            request.setLoginHint(userHint);
-            logger.info("  login_hint = " + request.getLoginHint());
+            logger.debug("  login_hint = " + request.getLoginHint());
         } else if (authRequestedUserHint.equals(CIBAConstants.ID_TOKEN_HINT)) {
-            userHint = params.getFirst(CIBAConstants.ID_TOKEN_HINT);
+            userHint = request.getIdTokenHint();
             if (userHint == null)
                 throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_REQUEST, "missing parameter : id_token_hint", Response.Status.BAD_REQUEST);
-            request.setIdTokenHint(userHint);
+            logger.debug("  id_token_hint = " + request.getIdTokenHint());
         } else if (authRequestedUserHint.equals(CIBAConstants.LOGIN_HINT_TOKEN)) {
-            userHint = params.getFirst(CIBAConstants.LOGIN_HINT_TOKEN);
+            userHint = request.getLoginHintToken();
             if (userHint == null)
                 throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_REQUEST, "missing parameter : login_hint_token", Response.Status.BAD_REQUEST);
-            request.setLoginHintToken(userHint);
+            logger.debug("  login_hint_token = " + request.getLoginHintToken());
         } else {
             logger.error("CIBA invalid Authentication Requested User Hint.");
             throw new ErrorResponseException(CIBAErrorCodes.UNKNOWN_USER_ID, "no user identifier in request", Response.Status.BAD_REQUEST);
         }
 
-        String bindingMessage = params.getFirst(CIBAConstants.BINDING_MESSAGE);
+        String bindingMessage = request.getBindingMessage();
         if (bindingMessage != null) {
-            request.setBindingMessage(bindingMessage);
-            logger.info("  binding_message = " + request.getBindingMessage());
+            logger.debug("  binding_message = " + request.getBindingMessage());
         }
 
-        String userCode = params.getFirst(CIBAConstants.USER_CODE);
+        String userCode = request.getUserCode();
         if (userCode != null) {
-            request.setUserCode(userCode);
             logger.debug("  user_code = " + request.getUserCode());
         }
 
-        return request;
     }
 
     private String getUserSessionIdWillBeCreated() {

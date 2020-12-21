@@ -20,6 +20,7 @@ public interface CIBAConstants {
     // https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html#signed_auth_request
     // Signed Authentication Request
     String REQUEST = OIDCLoginProtocol.REQUEST_PARAM;
+    String REQUEST_URI = OIDCLoginProtocol.REQUEST_URI_PARAM;
 
     // https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html#successful_authentication_request_acknowdlegment
     String AUTH_REQ_ID = "auth_req_id";

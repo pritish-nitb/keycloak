@@ -2,6 +2,9 @@ package org.keycloak.protocol.ciba.endpoints.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BackchannelAuthenticationRequest {
 
     String invalidRequestMessage;
@@ -31,6 +34,8 @@ public class BackchannelAuthenticationRequest {
 
     @JsonProperty("requested_expiry")
     String requestedExpiry;
+
+    Map<String, String> additionalReqParams = new HashMap<>();
 
     public String getInvalidRequestMessage() {
         return invalidRequestMessage;
@@ -112,4 +117,11 @@ public class BackchannelAuthenticationRequest {
         this.requestedExpiry = requestedExpiry;
     }
 
+    public Map<String, String> getAdditionalReqParams() {
+        return additionalReqParams;
+    }
+
+    public void setAdditionalReqParams(Map<String, String> additionalReqParams) {
+        this.additionalReqParams = additionalReqParams;
+    }
 }
